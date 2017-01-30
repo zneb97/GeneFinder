@@ -2,7 +2,7 @@
 """
 YOUR HEADER COMMENT HERE
 
-@author: YOUR NAME HERE
+@author: Benjamin Ziemann Github: zneb97
 
 """
 
@@ -25,12 +25,26 @@ def get_complement(nucleotide):
 
         nucleotide: a nucleotide (A, C, G, or T) represented as a string
         returns: the complementary nucleotide
+
+    Rationale: ensuring basic return of nucleotides for A/T
     >>> get_complement('A')
     'T'
+
+    Rationale: ensuring basic return of nucleotides
     >>> get_complement('C')
     'G'
+
+
     """
-    # TODO: implement this
+    if nucleotide == 'A':
+        return 'T'
+    if nucleotide == 'T':
+        return 'A'
+    if nucleotide == 'C':
+        return 'G'
+    if nucleotide == 'G':
+        return 'C'
+
     pass
 
 
@@ -40,12 +54,19 @@ def get_reverse_complement(dna):
 
         dna: a DNA sequence represented as a string
         returns: the reverse complementary DNA sequence represented as a string
+
     >>> get_reverse_complement("ATGCCCGCTTT")
     'AAAGCGGGCAT'
     >>> get_reverse_complement("CCGCGTTCA")
     'TGAACGCGG'
     """
-    # TODO: implement this
+    dna = dna[::-1]
+    parse = list(dna)
+    reverse = ""
+    for i in range(len(dna)):
+        reverse = reverse + get_complement(parse[i])
+    return reverse
+
     pass
 
 
@@ -57,12 +78,30 @@ def rest_of_ORF(dna):
 
         dna: a DNA sequence
         returns: the open reading frame represented as a string
+
     >>> rest_of_ORF("ATGTGAA")
     'ATG'
     >>> rest_of_ORF("ATGAGATAGG")
     'ATGAGA'
     """
-    # TODO: implement this
+
+    #Break dna string into triplets
+    triples = [dna[i:i + 3] for i in range(0, len(dna), 3)]
+    breakpoint = 0
+
+    #Search for stop codons
+    for i in range(len(triples)):
+        if(triples[i] == "TAG") or (triples[i] == "TGA") or (triples[i] == "TAA"):
+            breakpoint = i
+            break
+
+    #Return appropriate whole string
+    if(breakpoint == 0):
+        return dna
+    else:
+        dna = dna[0:breakpoint*3]
+        return dna
+
     pass
 
 
@@ -79,7 +118,29 @@ def find_all_ORFs_oneframe(dna):
     >>> find_all_ORFs_oneframe("ATGCATGAATGTAGATAGATGTGCCC")
     ['ATGCATGAATGTAGA', 'ATGTGCCC']
     """
-    # TODO: implement this
+    starts = []
+    orfs = []
+    count = 0
+    #Break into triples
+    triples = [dna[i:i + 3] for i in range(0, len(dna), 3)]
+    for i in range(len(triples)):
+        if triples[i] == "ATG":
+            #If first start found
+            if count == 0:
+                starts.append(i)
+                count = 1
+            #Ensure no nesting
+            else:
+                for q in range(0,len(triples[0:i])):
+                    if(triples[q] == "TAG") or (triples[q] == "TGA") or (triples[q] == "TAA"):
+                        starts.append(i)
+                        break
+
+    #Create list of full orfs
+    for j in range(len(starts)):
+        orf = dna[starts[j]*3:len(dna)]
+        orfs.append(rest_of_ORF(orf))
+    return orfs
     pass
 
 
@@ -96,7 +157,13 @@ def find_all_ORFs(dna):
     >>> find_all_ORFs("ATGCATGAATGTAG")
     ['ATGCATGAATGTAG', 'ATGAATGTAG', 'ATG']
     """
-    # TODO: implement this
+    frameOne = find_all_ORFs_oneframe(dna)
+    dna = dna[1:len(dna)]
+    frameTwo = find_all_ORFs_oneframe(dna)
+    dna = dna[1:len(dna)]
+    frameThree = find_all_ORFs_oneframe(dna)
+
+    return frameOne + frameTwo + frameThree
     pass
 
 
@@ -109,7 +176,13 @@ def find_all_ORFs_both_strands(dna):
     >>> find_all_ORFs_both_strands("ATGCGAATGTAGCATCAAA")
     ['ATGCGAATG', 'ATGCTACATTCGCAT']
     """
-    # TODO: implement this
+    reverseDNA = get_reverse_complement(dna)
+    reverseORFs = find_all_ORFs(reverseDNA)
+    dnaORFs = find_all_ORFs(dna)
+    orfs = dnaORFs + reverseORFs
+
+    return orfs
+
     pass
 
 
@@ -163,4 +236,5 @@ def gene_finder(dna):
 
 if __name__ == "__main__":
     import doctest
-    doctest.testmod()
+    #doctest.run_docstring_examples(find_all_ORFs_both_strands, globals(), verbose=True)
+    doctest.testmod(verbose=True)

@@ -7,6 +7,9 @@ YOUR HEADER COMMENT HERE
 """
 
 import random
+from random import shuffle
+import math
+import sys
 from amino_acids import aa, codons, aa_table   # you may find these useful
 from load import load_seq
 
@@ -33,18 +36,8 @@ def get_complement(nucleotide):
     Rationale: ensuring basic return of nucleotides
     >>> get_complement('C')
     'G'
-
-
     """
-    if nucleotide == 'A':
-        return 'T'
-    if nucleotide == 'T':
-        return 'A'
-    if nucleotide == 'C':
-        return 'G'
-    if nucleotide == 'G':
-        return 'C'
-
+    return {'C':'G', 'G':'C','T':'A', 'A':'T'}[nucleotide]
     pass
 
 
@@ -192,7 +185,13 @@ def longest_ORF(dna):
     >>> longest_ORF("ATGCGAATGTAGCATCAAA")
     'ATGCTACATTCGCAT'
     """
-    # TODO: implement this
+
+    longestString = ''
+    strands = find_all_ORFs_both_strands(dna)
+    for i in strands:
+        if len(i) > len(longestString):
+            longestString = i
+    return longestString
     pass
 
 
@@ -202,8 +201,18 @@ def longest_ORF_noncoding(dna, num_trials):
 
         dna: a DNA sequence
         num_trials: the number of random shuffles
-        returns: the maximum length longest ORF """
-    # TODO: implement this
+        returns: the maximum length longest ORF
+    >>> longest_ORF_noncoding('ATGCGAATGTAGCATCAAA', 500)
+    """
+    longestFinal = ''
+    longest = ''
+    for i in range(num_trials):
+        randomized = shuffle_string(dna)
+        longestString = longest_ORF(randomized)
+        if len(longestString) > len(longest):
+            longestFinal = longestString
+
+    return longestFinal
     pass
 
 
@@ -221,7 +230,12 @@ def coding_strand_to_AA(dna):
         >>> coding_strand_to_AA("ATGCCCGCTTT")
         'MPA'
     """
-    # TODO: implement this
+    amino = ""
+    triples = [dna[i:i + 3] for i in range(0, len(dna), 3)]
+    for i in triples:
+        if len(i) == 3:
+            amino += aa_table[i]
+    return amino
     pass
 
 
@@ -231,10 +245,12 @@ def gene_finder(dna):
         dna: a DNA sequence
         returns: a list of all amino acid sequences coded by the sequence dna.
     """
-    # TODO: implement this
+    longest = longest_ORF(dna)
+    aminos = coding_strand_to_AA(longest)
+    return aminos
     pass
 
 if __name__ == "__main__":
     import doctest
-    #doctest.run_docstring_examples(find_all_ORFs_both_strands, globals(), verbose=True)
-    doctest.testmod(verbose=True)
+    doctest.run_docstring_examples(gene_finder, globals(), verbose=True)
+    #doctest.testmod(verbose=True)
